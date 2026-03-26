@@ -67,6 +67,12 @@ class Backend(QObject):
         self._editBattery = int(self._batteryLevel * 100)
         self._cursorPos   = 0   # 0=Hd 1=Hu 2=Md 3=Mu 4=Bd 5=Bu
 
+        QTimer.singleShot(0, self._emit_initial_values)
+
+    def _emit_initial_values(self):
+        self.batteryLevelChanged.emit()
+        self.timeChanged.emit()
+        self.editChanged.emit()
 
     def open_trappe(self, vitesse=60, duree=2.8):
         self.pwm.stop()

@@ -95,7 +95,7 @@ Window {
             // ══════════════════════════════════════════════════════════════════
             Shape {
                 anchors.fill: parent
-                visible: root.battVisible
+                visible: true
                 ShapePath {
                     id: batteryFill
                     fillGradient: ConicalGradient {
@@ -106,7 +106,8 @@ Window {
                         GradientStop { position: 0.83; color: "#c00a00" }
                     }
                     strokeColor: "transparent"
-                    property real endDeg:   root.batStartDeg - backend.batteryLevel * root.batSweepAngle
+                    property real safeLevel: Math.max(0, Math.min(1, backend.batteryLevel))
+                    property real endDeg: root.batStartDeg - safeLevel * root.batSweepAngle
                     property bool largeArc: (root.batStartDeg - endDeg) > 180
                     startX: root.batPoint(root.batStartDeg, root.batOuterR).x
                     startY: root.batPoint(root.batStartDeg, root.batOuterR).y
@@ -151,7 +152,7 @@ Window {
             // Cache extérieur SVG batterie — code original inchangé
             Shape {
                 anchors.fill: parent
-                visible: root.battVisible
+                visible: true
                 ShapePath {
                     fillColor: "#ffffff"; strokeColor: "transparent"
                     PathSvg { path: "M0,0 L320,0 L320,320 L0,320 Z M194.0904,32.2908a139.0649,139.0649,0,0,1,109.95,118.6866C314.5111,232.0515,257.744,306.2046,177.2467,316.6036c-85.6619,11.0661-164.1372-49.9038-175.2794-136.18C-8.3495,100.5384,36.532,18.1565,111.4975,0.9638c21.952-5.0345,38.6205,32.2686,17.471,46.5793-8.0878,5.4726-41.6775,13.33-64.7992,46.3631a119.4859,119.4859,0,1,0,126.3076-47.644,10.5046,10.5046,0,0,1-2.4947-8.0994C188.2758,34.4483,191.2182,32.0065,194.0904,32.2908Z" }
