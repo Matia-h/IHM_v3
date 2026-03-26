@@ -3,8 +3,8 @@ import QtQuick.Shapes
 
 Window {
     id: root
-    width: 320
-    height: 320
+    width: 800
+    height: 600
     visible: true
     color: "#ffffff"
 
@@ -299,27 +299,24 @@ Window {
                 longPressTimer.stop()
                 var p = Qt.point(mouse.x, mouse.y)
                 var seg = segmentAtPoint(p)
+
                 if (!dragging) {
                     if (seg) {
-                        if (seg === "e1") root.e1Color     = root.colorClicked
+                        if (seg === "e1") root.e1Color = root.colorClicked
                         else if (seg === "e2") root.e2Color = root.colorClicked
                         else if (seg === "e3") root.e3Color = root.colorClicked
                         else if (seg === "e4") root.e4Color = root.colorClicked
                         else if (seg === "e5") root.eclairColor = root.colorClicked
+
                         root.userAction({ type: "click", segment: seg })
-                    } else {
-                        if (root.isUnlocked) {
-                            var now = Date.now()
-                            if (now - lastOuterClick < 400) {
-                                root.userAction({ type: "double_click_outer" })
-                                lastOuterClick = 0
-                            } else {
-                                lastOuterClick = now
-                            }
-                        }
+
+                        resetColorTimer.interval = 300   // click flash
+                        resetColorTimer.restart()
                     }
                 } else {
                     root.userAction({ type: "drag", segments: Object.keys(visitedSegments) })
+
+                    resetColorTimer.interval = 150   // 🔥 shorter for drag
                     resetColorTimer.restart()
                 }
             }
