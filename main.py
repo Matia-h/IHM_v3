@@ -3,8 +3,8 @@ from PySide6.QtCore import QObject, Slot, Property, Signal, QTimer, QTime
 from PySide6.QtGui import QGuiApplication
 from PySide6.QtQml import QQmlApplicationEngine, QJSValue
 from enum import Enum
-import RPi.GPIO as GPIO
 import time
+from gpiozero import PWMOutputDevice, DigitalOutputDevice
 
 class AppState(Enum):
     LOCKED    = "locked"
@@ -40,20 +40,9 @@ class Backend(QObject):
         self._charge_active = False
         self.PIN_CODE       = ["e1", "e3", "e2", "e4"]
 
-        # GPIO.setmode(GPIO.BCM)
-        self.INA = 27
-        self.INB = 22
-        self.PWM_PIN = 13
-        self.EN = 23
-
-        GPIO.setmode(GPIO.BCM)
-        GPIO.setup(self.INA, GPIO.OUT)
-        GPIO.setup(self.INB, GPIO.OUT)
-        GPIO.setup(self.PWM_PIN, GPIO.OUT)
-        GPIO.setup(self.EN, GPIO.OUT)
-        self.pwm = GPIO.PWM(self.PWM_PIN, 1000)
-
-
+        self.INA = DigitalOutputDevice(27)
+        self.INB = DigitalOutputDevice(22)
+        self.PWM = PWMOutputDevice(13)
 
         # Horloge
         self._time = QTime.currentTime()
@@ -74,20 +63,20 @@ class Backend(QObject):
         self.timeChanged.emit()
         self.editChanged.emit()
 
-    def open_trappe(self, vitesse=60, duree=2.8):
-        self.pwm.stop()
-        GPIO.output(self.INA, GPIO.HIGH)
-        GPIO.output(self.INB, GPIO.LOW)
-        self.pwm.ChangeDutyCycle(vitesse)
-        time.sleep(duree)
-        self.pwm.stop()
-    def close_trappe(self, vitesse=60, duree=2.8):
-        self.pwm.stop()
-        GPIO.output(self.INA, GPIO.LOW)
-        GPIO.output(self.INB, GPIO.HIGH)
-        self.pwm.ChangeDutyCycle(vitesse)
-        time.sleep(duree)
-        self.pwm.stop()
+    def open_trappe(self, vitesse=0.6, duree=2800):
+        self.INA.on()
+        self.INB.off()
+        self.PWM.value = vitesse
+
+        QTimer.singleShot(duree, lambda: self.PWM.off())
+
+    def close_trappe(self, vitesse=0.6, duree=2800):
+        self.INA.off()
+        self.INB.on()
+        self.PWM.value = vitesse
+
+        QTimer.singleShot(duree, lambda: self.PWM.off())
+
     # ── Horloge ──────────────────────────────────────────────────────────────
     def _update_clock(self):
         # Mise à jour uniquement hors mode différé (heure figée en mode program)
@@ -183,12 +172,12 @@ class Backend(QObject):
                 self.editChanged.emit()
                 self.timeChanged.emit()
             elif seg == "e3":
-                if self.trappe_open : 
-                    self.open_trappe()
+                if self.trappe_open :
+                    self.close_trappe() 
                     self.trappe_open = not self.trappe_open
                     print("🚪 Trappe:", "OUVERTE" if self.trappe_open else "FERMÉE")
                 else : 
-                    self.close_trappe()
+                    self.open_trappe()
                     self.trappe_open = not self.trappe_open
                     print("🚪 Trappe:", "OUVERTE" if self.trappe_open else "FERMÉE")
             elif seg in ("e4", "e5"):

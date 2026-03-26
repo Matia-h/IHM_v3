@@ -6,7 +6,9 @@ Window {
     width: 800
     height: 600
     visible: true
+    visibility: Window.FullScreen
     color: "#ffffff"
+
 
     signal userAction(var payload)
 
