@@ -24,6 +24,10 @@ Window {
         repeat: false
         onTriggered: {
             root.sleeping = true
+            root.isUnlocked = false
+            root.isDiffMode = false
+            root.resetSegColors()
+
             idleTimer.stop()
         }
     }
