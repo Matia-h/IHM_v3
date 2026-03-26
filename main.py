@@ -41,10 +41,10 @@ class Backend(QObject):
         self.PIN_CODE       = ["e1", "e3", "e2", "e4"]
 
         # GPIO.setmode(GPIO.BCM)
-        self.INA = 7
-        self.INB = 8
-        self.PWM_PIN = 5
-        self.EN = 6
+        self.INA = 27
+        self.INB = 22
+        self.PWM_PIN = 13
+        self.EN = 23
 
         GPIO.setmode(GPIO.BCM)
         GPIO.setup(self.INA, GPIO.OUT)
