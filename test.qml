@@ -8,9 +8,29 @@ Window {
     visible: true
     visibility: Window.FullScreen
     color: "#ffffff"
-
+    Component.onCompleted: {
+        idleTimer.start()
+        resetIdleTimer()
+    }
 
     signal userAction(var payload)
+
+    //SLEEP 
+    property bool sleeping: false
+
+    Timer {
+        id: idleTimer
+        interval: 30000   // 30s
+        repeat: false
+        onTriggered: {
+            root.sleeping = true
+            idleTimer.stop()
+        }
+    }
+
+    function resetIdleTimer() {
+         idleTimer.restart()
+    }
 
     // ─── MISE À L'ÉCHELLE DYNAMIQUE ──────────────────────────────────────────
     readonly property real svgBaseSize: 320
@@ -76,6 +96,7 @@ Window {
     // ─── UI ──────────────────────────────────────────────────────────────────
     Item {
         id: dialRoot
+        enabled: !root.sleeping
         // Mode différé : cadran rétréci à gauche pour laisser place au panneau
         width:  root.isDiffMode ? root.width * 0.60 : root.width
         height: root.height
@@ -289,6 +310,9 @@ Window {
             }
 
             onPressed: (mouse) => {
+                if (root.sleeping) return
+                root.sleeping = false
+                root.resetIdleTimer()
                 dragging = false
                 pressPos = Qt.point(mouse.x, mouse.y)
                 visitedSegments = ({})
@@ -299,6 +323,7 @@ Window {
             }
 
             onReleased: (mouse) => {
+                root.resetIdleTimer()
                 longPressTimer.stop()
                 var p = Qt.point(mouse.x, mouse.y)
                 var seg = segmentAtPoint(p)
@@ -325,6 +350,7 @@ Window {
             }
 
             onPositionChanged: (mouse) => {
+                root.resetIdleTimer()
                 if (!pressed) return
                 var dx = mouse.x - pressPos.x
                 var dy = mouse.y - pressPos.y
@@ -362,6 +388,7 @@ Window {
     // ═════════════════════════════════════════════════════════════════════════
     Item {
         id: diffPanel
+        enabled: !root.sleeping
         visible: root.isDiffMode
         opacity: root.isDiffMode ? 1.0 : 0.0
         Behavior on opacity { NumberAnimation { duration: 250 } }
@@ -474,5 +501,27 @@ Window {
                 }
             }
         }
+    }
+Rectangle {
+    anchors.fill: parent
+    color: "black"
+    visible: root.sleeping
+    opacity: root.sleeping ? 1 : 0
+    z: 9999
+
+    Behavior on opacity {
+        NumberAnimation { duration: 200 }
+    }
+
+    MouseArea {
+        anchors.fill: parent
+        preventStealing: true
+        propagateComposedEvents: false
+
+        onPressed: {
+            root.sleeping = false
+            root.resetIdleTimer()
+        }
+    }
     }
 }
