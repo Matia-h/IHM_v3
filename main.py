@@ -4,7 +4,7 @@ from PySide6.QtGui import QGuiApplication
 from PySide6.QtQml import QQmlApplicationEngine, QJSValue
 from enum import Enum
 import time
-from gpiozero import PWMOutputDevice, DigitalOutputDevice
+#from gpiozero import PWMOutputDevice, DigitalOutputDevice
 
 class AppState(Enum):
     LOCKED    = "locked"
@@ -31,7 +31,7 @@ class Backend(QObject):
 
     def __init__(self):
         super().__init__()
-        self._batteryLevel  = 0.25
+        self._batteryLevel  = 1
         self.state          = AppState.LOCKED
         self.pin_buffer     = []
         self.trappe_open    = False
@@ -40,9 +40,9 @@ class Backend(QObject):
         self._charge_active = False
         self.PIN_CODE       = ["e1", "e3", "e2", "e4"]
 
-        self.INA = DigitalOutputDevice(27)
-        self.INB = DigitalOutputDevice(22)
-        self.PWM = PWMOutputDevice(13)
+        #self.INA = DigitalOutputDevice(27)
+        #self.INB = DigitalOutputDevice(22)
+        #self.PWM = PWMOutputDevice(13)
 
         # Horloge
         self._time = QTime.currentTime()
