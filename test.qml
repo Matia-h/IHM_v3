@@ -3,38 +3,14 @@ import QtQuick.Shapes
 
 Window {
     id: root
-    //width: 800
-    //height: 480
+    width: 800
+    height: 480
     visible: true
     visibility: Window.FullScreen
     color: "#ffffff"
-    Component.onCompleted: {
-        idleTimer.start()
-        resetIdleTimer()
-    }
+
 
     signal userAction(var payload)
-
-    //SLEEP 
-    property bool sleeping: false
-
-    Timer {
-        id: idleTimer
-        interval: 30000   // 30s
-        repeat: false
-        onTriggered: {
-            root.sleeping = true
-            root.isUnlocked = false
-            root.isDiffMode = false
-            root.resetSegColors()
-
-            idleTimer.stop()
-        }
-    }
-
-    function resetIdleTimer() {
-         idleTimer.restart()
-    }
 
     // ─── MISE À L'ÉCHELLE DYNAMIQUE ──────────────────────────────────────────
     readonly property real svgBaseSize: 320
@@ -113,13 +89,10 @@ Window {
     // ─── UI ──────────────────────────────────────────────────────────────────
     Item {
         id: dialRoot
-        enabled: !root.sleeping
-        property real side: Math.min(root.width, root.height)
-
-        width:  side
-        height: side
-
-        anchors.centerIn: parent
+        // Mode différé : cadran rétréci à gauche pour laisser place au panneau
+        width:  root.isDiffMode ? root.width * 0.60 : root.width
+        height: root.height
+        anchors.left: parent.left
         Behavior on width { NumberAnimation { duration: 280; easing.type: Easing.OutCubic } }
 
         transform: Translate { id: shakeTranslate; x: 0 }
@@ -211,12 +184,7 @@ Window {
             Item {
                 id: svgScaleWrapper
                 anchors.fill: parent
-                property real fixScale: 320/305.9617
-
-                transform: Scale {
-                    xScale: fixScale
-                    yScale: fixScale   // 🔥 ultra important
-                }
+                transform: Scale { xScale: 320/305.9617; yScale: 320/317.8175 }
 
                 Shape {
                     id: e1Shape; x: -10.2624; y: -15.2508
@@ -334,9 +302,6 @@ Window {
             }
 
             onPressed: (mouse) => {
-                if (root.sleeping) return
-                root.sleeping = false
-                root.resetIdleTimer()
                 dragging = false
                 pressPos = Qt.point(mouse.x, mouse.y)
                 visitedSegments = ({})
@@ -347,7 +312,6 @@ Window {
             }
 
             onReleased: (mouse) => {
-                root.resetIdleTimer()
                 longPressTimer.stop()
                 var p = Qt.point(mouse.x, mouse.y)
                 var seg = segmentAtPoint(p)
@@ -374,7 +338,6 @@ Window {
             }
 
             onPositionChanged: (mouse) => {
-                root.resetIdleTimer()
                 if (!pressed) return
                 var dx = mouse.x - pressPos.x
                 var dy = mouse.y - pressPos.y
@@ -412,7 +375,6 @@ Window {
     // ═════════════════════════════════════════════════════════════════════════
     Item {
         id: diffPanel
-        enabled: !root.sleeping
         visible: root.isDiffMode
         opacity: root.isDiffMode ? 1.0 : 0.0
         Behavior on opacity { NumberAnimation { duration: 250 } }
@@ -525,27 +487,5 @@ Window {
                 }
             }
         }
-    }
-Rectangle {
-    anchors.fill: parent
-    color: "black"
-    visible: root.sleeping
-    opacity: root.sleeping ? 1 : 0
-    z: 9999
-
-    Behavior on opacity {
-        NumberAnimation { duration: 200 }
-    }
-
-    MouseArea {
-        anchors.fill: parent
-        preventStealing: true
-        propagateComposedEvents: false
-
-        onPressed: {
-            root.sleeping = false
-            root.resetIdleTimer()
-        }
-    }
     }
 }
