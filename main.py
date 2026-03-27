@@ -5,6 +5,9 @@ from PySide6.QtQml import QQmlApplicationEngine, QJSValue
 from enum import Enum
 import time
 from gpiozero import PWMOutputDevice, DigitalOutputDevice
+import board
+import busio
+import adafruit_drv2605
 
 class AppState(Enum):
     LOCKED    = "locked"
@@ -57,6 +60,25 @@ class Backend(QObject):
         self._cursorPos   = 0   # 0=Hd 1=Hu 2=Md 3=Mu 4=Bd 5=Bu
 
         QTimer.singleShot(0, self._emit_initial_values)
+
+        # ── Haptique DRV2605 ───────────────────────────────
+        self.haptic_en = DigitalOutputDevice(17)
+        self.haptic_en.on()
+
+        i2c = busio.I2C(board.SCL, board.SDA)
+        self.drv = adafruit_drv2605.DRV2605(i2c)
+
+    def vibrate_strong(self):
+        """Vibration forte (erreur PIN)"""
+        print("💥 VIBRATION FORTE")
+        self.drv.sequence[0] = adafruit_drv2605.Effect(14)  # effet fort
+        self.drv.play()
+
+    def vibrate_light(self):
+        """Petite vibration (feedback bouton)"""
+        print("🔹 vibration légère")
+        self.drv.sequence[0] = adafruit_drv2605.Effect(1)  # effet léger
+        self.drv.play()
 
     def _emit_initial_values(self):
         self.batteryLevelChanged.emit()
@@ -126,7 +148,8 @@ class Backend(QObject):
     def handleUserAction(self, payload):
         payload     = payload.toVariant()
         action_type = payload.get("type")
-
+        if action_type == "click":
+            self.vibrate_light()
         if self.state == AppState.LOCKED:
             self._handle_locked(action_type, payload)
         elif self.state == AppState.UNLOCKED:
@@ -148,6 +171,7 @@ class Backend(QObject):
             self.unlocked.emit()
         else:
             print(f"❌ PIN ERRONÉ — reçu: {self.pin_buffer}")
+            self.vibrate_strong() 
             self.pinFailed.emit()
         self.pin_buffer.clear()
 
