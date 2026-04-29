@@ -4,10 +4,10 @@ from PySide6.QtGui import QGuiApplication
 from PySide6.QtQml import QQmlApplicationEngine, QJSValue
 from enum import Enum
 import time
-from gpiozero import PWMOutputDevice, DigitalOutputDevice
-import board
-import busio
-import adafruit_drv2605
+#from gpiozero import PWMOutputDevice, DigitalOutputDevice
+#import board
+#import busio
+#import adafruit_drv2605
 
 class AppState(Enum):
     LOCKED    = "locked"
@@ -43,9 +43,9 @@ class Backend(QObject):
         self._charge_active = False
         self.PIN_CODE       = ["e1", "e3", "e2", "e4"]
 
-        self.INA = DigitalOutputDevice(27)
-        self.INB = DigitalOutputDevice(22)
-        self.PWM = PWMOutputDevice(13)
+        #self.INA = DigitalOutputDevice(27)
+        #self.INB = DigitalOutputDevice(22)
+        #self.PWM = PWMOutputDevice(13)
 
         # Horloge
         self._time = QTime.currentTime()
@@ -62,21 +62,23 @@ class Backend(QObject):
         QTimer.singleShot(0, self._emit_initial_values)
 
         # ── Haptique DRV2605 ───────────────────────────────
-        self.haptic_en = DigitalOutputDevice(17)
-        self.haptic_en.on()
+        #self.haptic_en = DigitalOutputDevice(17)
+        #self.haptic_en.on()
 
-        i2c = busio.I2C(board.SCL, board.SDA)
-        self.drv = adafruit_drv2605.DRV2605(i2c)
+        #i2c = busio.I2C(board.SCL, board.SDA)
+        #self.drv = adafruit_drv2605.DRV2605(i2c)
 
     def vibrate_strong(self):
         """Vibration forte (erreur PIN)"""
-        self.drv.sequence[0] = adafruit_drv2605.Effect(14)  # effet fort
-        self.drv.play()
+        print("💥 VIBRATION FORTE")
+        """self.drv.sequence[0] = adafruit_drv2605.Effect(14)  # effet fort
+        self.drv.play()"""
 
     def vibrate_light(self):
         """Petite vibration (feedback bouton)"""
-        self.drv.sequence[0] = adafruit_drv2605.Effect(1)  # effet léger
-        self.drv.play()
+        print("🔹 vibration légère")
+        """self.drv.sequence[0] = adafruit_drv2605.Effect(1)  # effet léger
+        self.drv.play()"""
 
     def _emit_initial_values(self):
         self.batteryLevelChanged.emit()
@@ -84,18 +86,18 @@ class Backend(QObject):
         self.editChanged.emit()
 
     def open_trappe(self, vitesse=0.6, duree=2800):
-        self.INA.on()
+        """self.INA.on()
         self.INB.off()
-        self.PWM.value = vitesse
+        self.PWM.value = vitesse"""
 
-        QTimer.singleShot(duree, lambda: self.PWM.off())
+        #QTimer.singleShot(duree, lambda: self.PWM.off())
 
     def close_trappe(self, vitesse=0.6, duree=2800):
-        self.INA.off()
+        """self.INA.off()
         self.INB.on()
-        self.PWM.value = vitesse
+        self.PWM.value = vitesse"""
 
-        QTimer.singleShot(duree, lambda: self.PWM.off())
+        #QTimer.singleShot(duree, lambda: self.PWM.off())
 
     # ── Horloge ──────────────────────────────────────────────────────────────
     def _update_clock(self):
@@ -378,7 +380,7 @@ if __name__ == "__main__":
     backend = Backend()
     engine.rootContext().setContextProperty("backend", backend)
 
-    engine.load("test.qml")
+    engine.load("t2.qml")
 
     if not engine.rootObjects():
         sys.exit(-1)
